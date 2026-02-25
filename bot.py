@@ -7,7 +7,8 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
-TOKEN = os.getenv('TOKEN')
+#TOKEN = os.getenv("TOKEN")
+TOKEN = "<INSERT TELEGRAM API KEY HERE>" # direct input of token
 ITEM_PRICES_URL = "https://prices.runescape.wiki/api/v1/osrs/latest"
 ITEM_MAPPING_URL = "https://prices.runescape.wiki/api/v1/osrs/mapping"
 ITEM_DETAIL_URL = "https://secure.runescape.com/m=itemdb_oldschool/api/catalogue/detail.json?item={}"
@@ -27,7 +28,7 @@ async def start(update: Update, context: CallbackContext):
         "/stats <username> - Get player stats\n"
         "/mob <name> - Get monster stats\n"
         "/wiki <query> - Search OSRS Wiki\n"
-        "/house - Joel's house progress\n"
+        "/miner - Joel's mining progress\n"
     )
     await update.message.reply_text(message)
 
@@ -150,8 +151,8 @@ async def wiki(update: Update, context: CallbackContext):
     # else:
     #     return f"Error fetching data."
 
-async def house(update: Update, context: CallbackContext):
-    """Returns Joel's house progress."""    
+async def miner(update: Update, context: CallbackContext):
+    """Returns Joel's mining progress."""    
     hiscores_url = "https://secure.runescape.com/m=hiscore_oldschool/index_lite.json?player=Tricstar"
     response = requests.get(hiscores_url)
 
@@ -161,10 +162,10 @@ async def house(update: Update, context: CallbackContext):
         data = response.json()
 
         # List of skills
-        skills = ("Construction", data['skills'][23]['level'], data['skills'][23]['xp'])
+        skills = ("Mining", data['skills'][15]['level'], data['skills'][15]['xp'])
 
         # Example: Accessing the "skills" data
-        message = f"🏠 Joel is {83-skills[1]} levels away from 83 Construction!\n\n🧰 Remaining XP: {2673114 - skills[2]:,}"
+        message = f"⛏️ Joel is {99-skills[1]} levels away from 99 Mining!\n\n📊 Remaining XP: {13034431 - skills[2]:,}"
 
         await update.message.reply_text(message)
 
@@ -181,8 +182,7 @@ def main():
     application.add_handler(CommandHandler("stats", stats))
     application.add_handler(CommandHandler("mob", mob))
     application.add_handler(CommandHandler("wiki", wiki))
-    application.add_handler(CommandHandler("house", house))
-    
+    application.add_handler(CommandHandler("miner", miner))
     application.run_polling()
 
 if __name__ == "__main__":
