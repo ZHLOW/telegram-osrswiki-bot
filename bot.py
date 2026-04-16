@@ -5,10 +5,13 @@ from dotenv import load_dotenv
 import os
 
 # Load environment variables from .env file
-load_dotenv()
+#load_dotenv()
 
-#TOKEN = os.getenv("TOKEN")
-TOKEN = "<INSERT TELEGRAM API KEY HERE>" # direct input of token
+TOKEN = os.getenv("TELEGRAM_API_TOKEN")
+
+if not TOKEN:
+        raise ValueError("TELEGRAM_API_TOKEN environment variable not set")
+
 ITEM_PRICES_URL = "https://prices.runescape.wiki/api/v1/osrs/latest"
 ITEM_MAPPING_URL = "https://prices.runescape.wiki/api/v1/osrs/mapping"
 ITEM_DETAIL_URL = "https://secure.runescape.com/m=itemdb_oldschool/api/catalogue/detail.json?item={}"
@@ -29,19 +32,20 @@ async def start(update: Update, context: CallbackContext):
         "/mob <name> - Get monster stats\n"
         "/wiki <query> - Search OSRS Wiki\n"
         "/miner - Joel's mining progress\n"
+        "/scare - Is joel quaking?\n"
     )
     await update.message.reply_text(message)
 
 async def item(update: Update, context: CallbackContext):
     """Fetch item price, large icon & wiki link."""
-    
+
     if not context.args:
         await update.message.reply_text("Usage: /item <item_name>")
         return
-    
+
     item_name = " ".join(context.args).lower()
     item = ITEM_MAPPING.get(item_name)
-    
+
     if not item:
         await update.message.reply_text("⚠️ Item not found. Check spelling.")
         return
@@ -64,7 +68,7 @@ async def item(update: Update, context: CallbackContext):
         f"- 📉 Low: {price_data.get('low', 0):,} gp\n"
         f"- 🔗 [Item Wiki Link](https://oldschool.runescape.wiki/w/{item_name.replace(' ', '_')})"
     )
-    
+
     # Sending the message with large icon and price details
     await update.message.reply_photo(photo=icon_large, caption=price_text, parse_mode="Markdown")
 
@@ -72,10 +76,10 @@ async def stats(update: Update, context: CallbackContext) -> None:
     if not context.args:
         await update.message.reply_text("Please provide a username. Usage: /stats <username>")
         return
-    
+
     username = context.args[0]
     hiscores_url = f"https://secure.runescape.com/m=hiscore_oldschool/index_lite.json?player={username}"
-    
+
     response = requests.get(hiscores_url)
 
     # Check if the request was successful (status code 200)
@@ -112,7 +116,7 @@ async def stats(update: Update, context: CallbackContext) -> None:
             ("🏠 Construction", data['skills'][23]['level']),
             ("🐾 Hunter", data['skills'][22]['level']),
         ]
-        
+
         # Example: Accessing the "skills" data
         message = ""
         message += f"Displaying Stats for --- {username}\n\nTotal Level: {skills[0][1]}\n\n"
@@ -121,9 +125,9 @@ async def stats(update: Update, context: CallbackContext) -> None:
             message += f"{str(skills[i][0])}: {str(skills[i][1])}\n"
             if i == 7:
                 message += "\n"
-              
+
         await update.message.reply_text(message)
-        
+
     else:
         await update.message.reply_text(f"{username} is a bot 🤖")
 
@@ -142,17 +146,17 @@ async def wiki(update: Update, context: CallbackContext):
     if not context.args:
         await update.message.reply_text("Usage: /wiki <query>")
         return
-    
+
     # if response.status_code == 200 and response.status_code != 404:
     query = "_".join(context.args)
     wiki_url = f"https://oldschool.runescape.wiki/w/{query}"
     await update.message.reply_text(f"🔗 **OSRS Wiki:** [Click here]({wiki_url})", parse_mode="Markdown")
-    
+
     # else:
     #     return f"Error fetching data."
 
 async def miner(update: Update, context: CallbackContext):
-    """Returns Joel's mining progress."""    
+    """Returns Joel's mining progress."""
     hiscores_url = "https://secure.runescape.com/m=hiscore_oldschool/index_lite.json?player=Tricstar"
     response = requests.get(hiscores_url)
 
@@ -172,17 +176,22 @@ async def miner(update: Update, context: CallbackContext):
     else:
         return f"Error fetching stats."
 
+async def scare(update: Update, context: CallbackContext):
+    """joel quaking"""
+    await update.message.reply_text("joel quaking")
+
 def main():
     """Start the bot."""
     print("Bot is running...")
     application = Application.builder().token(TOKEN).build()
-    
+
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("item", item))
     application.add_handler(CommandHandler("stats", stats))
     application.add_handler(CommandHandler("mob", mob))
     application.add_handler(CommandHandler("wiki", wiki))
     application.add_handler(CommandHandler("miner", miner))
+    application.add_handler(CommandHandler("scare", scare))
     application.run_polling()
 
 if __name__ == "__main__":
